@@ -81,20 +81,23 @@ class GFile:
                         "Origin": "https://gigafile.nu"
                     }
                     # print(headers)
-                    resp = self.session.post(
-                        f"https://{server}/upload_chunk.php", headers=headers, data=form)
+                    try:   
+                        resp = self.session.post(
+                            f"https://{server}/upload_chunk.php", headers=headers, data=form)
 
-                    try:    
                         resp = resp.json()
+
+                        if 'url' in resp:
+                            self.data = resp
+                    
+                        if 'status' not in resp or resp['status']:
+                            print(resp)
+                            self.failed = True
                     except OSError as reason:
                         print(reason)
-
-                    if 'url' in resp:
-                        self.data = resp
-                    
-                    if 'status' not in resp or resp['status']:
-                        print(resp)
                         self.failed = True
+
+                    
                     if self.failed: break
                     self.lock.acquire()
         if self.lock.locked(): self.lock.release()
@@ -135,6 +138,8 @@ class GFile:
 
     def get_download_page(self): return self.data and self.data['url']
     def get_file_id(self): return self.data and self.data['filename']
+    def get_file_name(self): return os.path.basename(self.uri)
+    def get_file_size(self): return f"{round(os.path.getsize(self.uri) / 1024**3,3)}GB"
 
     def get_download(self):
         _data: dict[str, str] = self.data

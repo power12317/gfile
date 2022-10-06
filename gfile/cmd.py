@@ -32,7 +32,9 @@ def main():
         gf.download(args.chunk_copy_size, args.progress)
         
     else:
-        print(gf.upload().get_download_page())
+        up = gf.upload()
+        print(up.get_file_name() + " " + up.get_file_size())
+        print(up.get_download_page())
         
 if __name__ == "__main__":
     main()
