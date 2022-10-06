@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 class GFile:
 
-    def __init__(self, uri, progress=False, thread_num=4, chunk_size=1024*1024*100, chunk_copy_size=1024*1024, **kwargs) -> None:
+    def __init__(self, uri, progress=False, thread_num=8, chunk_size=1024*1024*100, chunk_copy_size=1024*1024, **kwargs) -> None:
         self.uri = uri
         self.chunk_size = chunk_size
         self.chunk_copy_size = chunk_copy_size
@@ -27,7 +27,7 @@ class GFile:
         self.index = 0
 
 
-    def upload_chunk(self, chunks):
+    def upload_chunk(self, chunks ,server):
         self.lock.acquire()
         with open(self.uri, 'rb') as ff:
             while not self.failed and self.index < chunks:
@@ -49,8 +49,8 @@ class GFile:
                         "name": os.path.basename(self.uri),
                         "chunk": str(self.index),
                         "chunks": str(chunks),
-                        "lifetime": "7",
-                        "file": (self.uri, f, "application/octet-stream"),
+                        "lifetime": "100",
+                        "file": ("blob", f, "application/octet-stream"),
                     }
                     # print(fields)
 
@@ -73,13 +73,21 @@ class GFile:
                         
                         form = encoder.MultipartEncoderMonitor(form, progress)
                         setattr(form, 'prog', 0)
-                    server = re.search(
-                        r'var server = "(.+?)"', self.session.get('https://gigafile.nu/').text)[1]
+                    
                     headers = {
                         "content-type": form.content_type,
+                        "Referer": "https://gigafile.nu/",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
+                        "Origin": "https://gigafile.nu"
                     }
+                    # print(headers)
                     resp = self.session.post(
-                        f"https://{server}/upload_chunk.php", headers=headers, data=form).json()
+                        f"https://{server}/upload_chunk.php", headers=headers, data=form)
+
+                    try:    
+                        resp = resp.json()
+                    except OSError as reason:
+                        print(reason)
 
                     if 'url' in resp:
                         self.data = resp
@@ -103,10 +111,12 @@ class GFile:
         if self.progress:
             self.pbar = tqdm(total=size, unit="B", unit_scale=True, leave=False, unit_divisor=1024)
         self.session = requests.Session()
+        server = re.search(
+            r'var server = "(.+?)"', self.session.get('https://gigafile.nu/').text)[1]
         # self.session.get('https://gigafile.nu/')
         threads = []
         for _ in range(self.thread_num):
-            t = Thread(target=self.upload_chunk, args=(chunks,))
+            t = Thread(target=self.upload_chunk, args=(chunks,server,))
             threads.append(t)
             t.start()
         
