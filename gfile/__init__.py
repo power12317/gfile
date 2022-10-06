@@ -1,4 +1,4 @@
-cd from .gfile import GFile
+from .gfile import GFile
 
 __author__ = """SraqZit"""
 __email__ = 'sraqzit@gmail.com'
