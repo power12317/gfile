@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='gfile',
-    version='2.1',
+    version='2.1 Power Mod',
     description='A python module to download and upload from gigafile.nu',
     author='Sraqzit',
     author_email='kingofmestry@gmail.com',
