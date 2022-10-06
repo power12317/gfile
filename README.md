@@ -5,7 +5,7 @@ This is a personal tool as you may come across errors and bugs so feel free to a
 
     $ python setup.py install --user
     or
-    $ pip install git+https://github.com/Sraq-Zit/gfile.git
+    $ pip install git+https://github.com/power12317/gfile.git
 
 # Usage
 
